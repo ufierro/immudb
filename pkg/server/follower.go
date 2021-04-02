@@ -40,13 +40,11 @@ func (s *ImmuServer) followerLogin() (client.ImmuClient, context.Context, error)
 
 	client, err := client.NewImmuClient(opts)
 	if err != nil {
-		s.Logger.Errorf("Failed to connect. Reason: %v", err)
 		return nil, ctx, err
 	}
 
 	login, err := client.Login(ctx, []byte(s.followerUser), []byte(s.followerPwd))
 	if err != nil {
-		s.Logger.Errorf("Failed to login. Reason: %v", err)
 		return nil, ctx, err
 	}
 
@@ -61,16 +59,30 @@ func (s *ImmuServer) follow() {
 		s.Logger.Infof("Replication stopped.")
 	}()
 
-	client, ctx, err := s.followerLogin()
-	if err != nil {
-		s.Logger.Errorf("Failed to login. Reason %s %s: %v", s.followerUser, s.followerPwd, err)
-	}
-	defer client.Logout(ctx)
+	var client client.ImmuClient
+	var ctx context.Context
+	var err error
+
+	defer func() {
+		if client != nil {
+			client.Logout(ctx)
+		}
+	}()
 
 	for {
 		select {
 		case <-time.Tick(1 * time.Millisecond):
 			{
+				if client == nil {
+					client, ctx, err = s.followerLogin()
+					if err != nil {
+						s.Logger.Errorf("Replication got error: %v", err)
+						time.Sleep(5 * time.Second)
+						client = nil
+						break
+					}
+				}
+
 				db := s.dbList.GetByIndex(s.databasenameToIndex[s.Options.defaultDbName])
 
 				state, err := db.CurrentState()
@@ -85,17 +97,10 @@ func (s *ImmuServer) follow() {
 					time.Sleep(10 * time.Second)
 					continue
 				}
-				if err != nil {
+				if err != nil && !strings.Contains(err.Error(), "tx not found") {
 					s.Logger.Warningf("Replication got error when trying to fetch tx from master: %v", err)
-
 					time.Sleep(5 * time.Second)
-
-					client, ctx, err = s.followerLogin()
-					if err != nil {
-						s.Logger.Errorf("Failed to login. Reason: %v", err)
-						continue
-					}
-
+					client = nil
 					continue
 				}
 
@@ -105,24 +110,23 @@ func (s *ImmuServer) follow() {
 					e, err := client.GetAt(ctx, kv.Key, tx.Metadata.Id)
 					if err != nil {
 						s.Logger.Warningf("Replication got error when trying to fetch tx data from master: %v", err)
-
 						time.Sleep(5 * time.Second)
-
-						client, ctx, err = s.followerLogin()
-						if err != nil {
-							s.Logger.Errorf("Failed to login. Reason: %v", err)
-							continue
-						}
-
-						return
+						client = nil
+						break
 					}
 
 					kvs[i] = &schema.KeyValue{Key: kv.Key, Value: e.Value}
 				}
 
+				if client == nil {
+					continue
+				}
+
 				_, err = db.ReplicatedSet(kvs, true, tx.Metadata.Ts, tx.Metadata.BlTxId)
 				if err != nil {
 					s.Logger.Warningf("Replication got error: %v", err)
+					time.Sleep(5 * time.Second)
+					client = nil
 				}
 			}
 		case <-s.quit:
