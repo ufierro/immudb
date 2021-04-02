@@ -71,7 +71,7 @@ func (s *ImmuServer) follow() {
 
 	for {
 		select {
-		case <-time.Tick(1 * time.Millisecond):
+		case <-time.Tick(10 * time.Millisecond):
 			{
 				if client == nil {
 					client, ctx, err = s.followerLogin()
