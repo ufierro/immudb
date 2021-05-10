@@ -39,11 +39,15 @@ func (dbm dbMock) CurrentState() (*schema.ImmutableState, error) {
 	return &schema.ImmutableState{TxId: 99}, nil
 }
 
+func (dbm dbMock) GetName() string {
+	return "dbname"
+}
+
 func TestMetricFuncDefaultDBRecordsCounter(t *testing.T) {
+	dbList := database.NewDatabaseList()
+	dbList.Append(dbMock{})
 	s := ImmuServer{
-		dbList: &databaseList{
-			databases: []database.DB{dbMock{}},
-		},
+		dbList: dbList,
 	}
 	nbRecords := s.metricFuncDefaultDBRecordsCounter()
 	require.Equal(t, 99, int(nbRecords))
