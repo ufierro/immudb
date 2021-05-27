@@ -200,6 +200,10 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | databaseName | [string](#string) |  |  |
+| replica | [bool](#bool) |  |  |
+| srcDBName | [string](#string) |  |  |
+| srcDBAddress | [string](#string) |  |  |
+| srcDBPort | [uint32](#uint32) |  |  |
 
 
 
