@@ -864,7 +864,6 @@
 | ----- | ---- | ----- | ----------- |
 | key | [bytes](#bytes) |  |  |
 | hValue | [bytes](#bytes) |  |  |
-| vOff | [int64](#int64) |  |  |
 | vLen | [int32](#int32) |  |  |
 
 
