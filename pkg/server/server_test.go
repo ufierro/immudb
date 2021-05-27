@@ -452,7 +452,7 @@ func TestServerListUsersAdmin(t *testing.T) {
 	require.NoError(t, err)
 
 	s.dbList = database.NewDatabaseList()
-	s.sysDb = nil
+	s.sysDB = nil
 
 	err = s.loadSystemDatabase(s.Options.Dir, auth.SysAdminPassword)
 	require.NoError(t, err)
@@ -1930,7 +1930,7 @@ func TestServerMandatoryAuth(t *testing.T) {
 	s.dbList.Append(s.dbList.GetByIndex(0))
 	require.True(t, s.mandatoryAuth())
 
-	s.sysDb = nil
+	s.sysDB = nil
 	require.True(t, s.mandatoryAuth())
 }
 
