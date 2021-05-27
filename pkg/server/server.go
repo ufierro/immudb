@@ -58,6 +58,8 @@ import (
 const (
 	//KeyPrefixUser All user keys in the key/value store are prefixed by this keys to distinguish them from keys that have other purposes
 	KeyPrefixUser = iota + 1
+	//KeyPrefixDB is used for entries related to database settings
+	KeyPrefixDB
 )
 
 var startedAt time.Time
@@ -190,7 +192,7 @@ func (s *ImmuServer) Initialize() error {
 	schema.RegisterImmuServiceServer(s.GrpcServer, s)
 	grpc_prometheus.Register(s.GrpcServer)
 
-	s.PgsqlSrv = pgsqlsrv.New(pgsqlsrv.Port(s.Options.PgsqlServerPort), pgsqlsrv.DatabaseList(s.dbList), pgsqlsrv.SysDb(s.sysDb), pgsqlsrv.TlsConfig(s.Options.TLSConfig))
+	s.PgsqlSrv = pgsqlsrv.New(pgsqlsrv.Port(s.Options.PgsqlServerPort), pgsqlsrv.DatabaseList(s.dbList), pgsqlsrv.SysDb(s.sysDB), pgsqlsrv.TlsConfig(s.Options.TLSConfig))
 	if s.Options.PgsqlServer {
 		if err = s.PgsqlSrv.Initialize(); err != nil {
 			return err
@@ -338,7 +340,7 @@ func (s *ImmuServer) loadSystemDatabase(dataDir string, adminPassword string) er
 			return err
 		}
 
-		s.sysDb = db
+		s.sysDB = db
 		//sys admin can have an empty array of databases as it has full access
 		adminUsername, _, err := s.insertNewUser([]byte(auth.SysAdminUsername), []byte(adminPassword), auth.PermissionSysAdmin, "*", false, "")
 		if err != nil {
@@ -352,7 +354,7 @@ func (s *ImmuServer) loadSystemDatabase(dataDir string, adminPassword string) er
 			return err
 		}
 
-		s.sysDb = db
+		s.sysDB = db
 	}
 
 	return nil
@@ -373,14 +375,14 @@ func (s *ImmuServer) loadDefaultDatabase(dataDir string) error {
 
 	_, defaultDbErr := s.OS.Stat(defaultDbRootDir)
 	if s.OS.IsNotExist(defaultDbErr) {
-		db, err := database.NewDb(op, s.sysDb, s.Logger)
+		db, err := database.NewDb(op, s.sysDB, s.Logger)
 		if err != nil {
 			return err
 		}
 
 		s.dbList.Append(db)
 	} else {
-		db, err := database.OpenDb(op, s.sysDb, s.Logger)
+		db, err := database.OpenDb(op, s.sysDB, s.Logger)
 		if err != nil {
 			return err
 		}
@@ -422,7 +424,7 @@ func (s *ImmuServer) loadUserDatabases(dataDir string) error {
 			WithDbRootPath(dataDir).
 			WithStoreOptions(s.Options.StoreOptions)
 
-		db, err := database.OpenDb(op, s.sysDb, s.Logger)
+		db, err := database.OpenDb(op, s.sysDB, s.Logger)
 		if err != nil {
 			return err
 		}
@@ -457,8 +459,8 @@ func (s *ImmuServer) CloseDatabases() error {
 		val.Close()
 	}
 
-	if s.sysDb != nil {
-		s.sysDb.Close()
+	if s.sysDB != nil {
+		s.sysDB.Close()
 	}
 
 	return nil
@@ -1043,9 +1045,13 @@ func (s *ImmuServer) CreateDatabase(ctx context.Context, newdb *schema.Database)
 	op := database.DefaultOption().
 		WithDbName(newdb.DatabaseName).
 		WithDbRootPath(dataDir).
-		WithStoreOptions(s.Options.StoreOptions)
+		WithStoreOptions(s.Options.StoreOptions).
+		AsReplica(newdb.Replica).
+		WithSrcDBName(newdb.SrcDBName).
+		WithSrcDBAddress(newdb.SrcDBAddress).
+		WithSrcDBPort(int(newdb.SrcDBPort))
 
-	db, err := database.NewDb(op, s.sysDb, s.Logger)
+	db, err := database.NewDb(op, s.sysDB, s.Logger)
 	if err != nil {
 		s.Logger.Errorf(err.Error())
 		return nil, err
@@ -1142,7 +1148,7 @@ func (s *ImmuServer) ListUsers(ctx context.Context, req *empty.Empty) (*schema.U
 		}
 	}
 
-	itemList, err := s.sysDb.Scan(&schema.ScanRequest{
+	itemList, err := s.sysDB.Scan(&schema.ScanRequest{
 		Prefix:  []byte{KeyPrefixUser},
 		SinceTx: math.MaxUint64,
 		NoWait:  true,
@@ -1604,7 +1610,7 @@ func (s *ImmuServer) getUser(username []byte, includeDeactivated bool) (*auth.Us
 	key[0] = KeyPrefixUser
 	copy(key[1:], username)
 
-	item, err := s.sysDb.Get(&schema.KeyRequest{Key: key})
+	item, err := s.sysDB.Get(&schema.KeyRequest{Key: key})
 	if err != nil {
 		return nil, err
 	}
@@ -1636,9 +1642,7 @@ func (s *ImmuServer) saveUser(user *auth.User) error {
 	copy(userKey[1:], []byte(user.Username))
 
 	userKV := &schema.KeyValue{Key: userKey, Value: userData}
-	_, err = s.sysDb.Set(&schema.SetRequest{KVs: []*schema.KeyValue{userKV}})
-
-	time.Sleep(time.Duration(10) * time.Millisecond)
+	_, err = s.sysDB.Set(&schema.SetRequest{KVs: []*schema.KeyValue{userKV}})
 
 	return logErr(s.Logger, "error saving user: %v", err)
 }
@@ -1703,9 +1707,9 @@ func (s *ImmuServer) mandatoryAuth() bool {
 		return false
 	}
 
-	if s.sysDb != nil {
+	if s.sysDB != nil {
 		//check if there is only sysadmin on systemdb and no other user
-		itemList, err := s.sysDb.Scan(&schema.ScanRequest{
+		itemList, err := s.sysDB.Scan(&schema.ScanRequest{
 			Prefix: []byte{KeyPrefixUser},
 		})
 
