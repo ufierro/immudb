@@ -21,12 +21,12 @@ import (
 )
 
 type vEntryStreamReceiver struct {
-	s               MsgReceiver
+	s               io.Reader
 	StreamChunkSize int
 }
 
 // NewVEntryStreamReceiver ...
-func NewVEntryStreamReceiver(s MsgReceiver, chunkSize int) VEntryStreamReceiver {
+func NewVEntryStreamReceiver(s io.Reader, chunkSize int) VEntryStreamReceiver {
 	return &vEntryStreamReceiver{
 		s:               s,
 		StreamChunkSize: chunkSize,

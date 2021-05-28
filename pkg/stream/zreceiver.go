@@ -21,12 +21,12 @@ import (
 )
 
 type zStreamReceiver struct {
-	s               MsgReceiver
+	s               io.Reader
 	StreamChunkSize int
 }
 
 // NewZStreamReceiver ...
-func NewZStreamReceiver(s MsgReceiver, chunkSize int) *zStreamReceiver {
+func NewZStreamReceiver(s io.Reader, chunkSize int) *zStreamReceiver {
 	return &zStreamReceiver{
 		s:               s,
 		StreamChunkSize: chunkSize,
