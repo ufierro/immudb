@@ -88,6 +88,9 @@ type ImmuClient interface {
 	UseDatabase(ctx context.Context, d *schema.Database) (*schema.UseDatabaseReply, error)
 	SetActiveUser(ctx context.Context, u *schema.SetActiveUserRequest) error
 
+	CompactIndex(ctx context.Context) error
+
+	// CleanIndex is deprecated, please use CompactIndex instead
 	CleanIndex(ctx context.Context, req *emptypb.Empty) error
 
 	CurrentState(ctx context.Context) (*schema.ImmutableState, error)
@@ -1374,7 +1377,23 @@ func (c *immuClient) UseDatabase(ctx context.Context, db *schema.Database) (*sch
 	return result, err
 }
 
+func (c *immuClient) CompactIndex(ctx context.Context) error {
+	start := time.Now()
+
+	if !c.IsConnected() {
+		return ErrNotConnected
+	}
+
+	_, err := c.ServiceClient.CompactIndex(ctx, &empty.Empty{})
+
+	c.Logger.Debugf("CompactIndex finished in %s", time.Since(start))
+
+	return err
+}
+
 func (c *immuClient) CleanIndex(ctx context.Context, req *empty.Empty) error {
+	c.Logger.Warningf("CleanIndex API is deprecated please use CompactIndex instead")
+
 	start := time.Now()
 
 	if !c.IsConnected() {
