@@ -64,8 +64,8 @@
     - [VerifiableGetRequest](#immudb.schema.VerifiableGetRequest)
     - [VerifiableReferenceRequest](#immudb.schema.VerifiableReferenceRequest)
     - [VerifiableSQLEntry](#immudb.schema.VerifiableSQLEntry)
-    - [VerifiableSQLEntry.ColIdsByIdEntry](#immudb.schema.VerifiableSQLEntry.ColIdsByIdEntry)
     - [VerifiableSQLEntry.ColIdsByNameEntry](#immudb.schema.VerifiableSQLEntry.ColIdsByNameEntry)
+    - [VerifiableSQLEntry.ColNamesByIdEntry](#immudb.schema.VerifiableSQLEntry.ColNamesByIdEntry)
     - [VerifiableSQLEntry.ColTypesByIdEntry](#immudb.schema.VerifiableSQLEntry.ColTypesByIdEntry)
     - [VerifiableSQLGetRequest](#immudb.schema.VerifiableSQLGetRequest)
     - [VerifiableSetRequest](#immudb.schema.VerifiableSetRequest)
@@ -1088,25 +1088,9 @@
 | DatabaseId | [uint64](#uint64) |  |  |
 | TableId | [uint64](#uint64) |  |  |
 | PKName | [string](#string) |  |  |
-| ColIdsById | [VerifiableSQLEntry.ColIdsByIdEntry](#immudb.schema.VerifiableSQLEntry.ColIdsByIdEntry) | repeated |  |
+| ColNamesById | [VerifiableSQLEntry.ColNamesByIdEntry](#immudb.schema.VerifiableSQLEntry.ColNamesByIdEntry) | repeated |  |
 | ColIdsByName | [VerifiableSQLEntry.ColIdsByNameEntry](#immudb.schema.VerifiableSQLEntry.ColIdsByNameEntry) | repeated |  |
 | ColTypesById | [VerifiableSQLEntry.ColTypesByIdEntry](#immudb.schema.VerifiableSQLEntry.ColTypesByIdEntry) | repeated |  |
-
-
-
-
-
-
-<a name="immudb.schema.VerifiableSQLEntry.ColIdsByIdEntry"></a>
-
-### VerifiableSQLEntry.ColIdsByIdEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| key | [uint64](#uint64) |  |  |
-| value | [string](#string) |  |  |
 
 
 
@@ -1123,6 +1107,22 @@
 | ----- | ---- | ----- | ----------- |
 | key | [string](#string) |  |  |
 | value | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="immudb.schema.VerifiableSQLEntry.ColNamesByIdEntry"></a>
+
+### VerifiableSQLEntry.ColNamesByIdEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [uint64](#uint64) |  |  |
+| value | [string](#string) |  |  |
 
 
 
