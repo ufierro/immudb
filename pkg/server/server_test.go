@@ -261,7 +261,7 @@ func TestServerCreateDatabase(t *testing.T) {
 	md := metadata.Pairs("authorization", lr.Token)
 	ctx = metadata.NewIncomingContext(context.Background(), md)
 
-	newdb := &schema.Database{
+	newdb := &schema.DatabaseSettings{
 		DatabaseName: "lisbon",
 	}
 	_, err = s.CreateDatabase(ctx, newdb)
@@ -286,7 +286,7 @@ func TestServerCreateDatabaseCaseError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Login error %v", err)
 	}
-	newdb := &schema.Database{
+	newdb := &schema.DatabaseSettings{
 		DatabaseName: "MyDatabase",
 	}
 	md := metadata.Pairs("authorization", lr.Token)
@@ -319,7 +319,7 @@ func TestServerCreateMultipleDatabases(t *testing.T) {
 	for i := 0; i < 64; i++ {
 		dbname := fmt.Sprintf("db%d", i)
 
-		db := &schema.Database{
+		db := &schema.DatabaseSettings{
 			DatabaseName: dbname,
 		}
 		_, err = s.CreateDatabase(ctx, db)
@@ -327,7 +327,7 @@ func TestServerCreateMultipleDatabases(t *testing.T) {
 			t.Fatalf("Createdatabase error %v", err)
 		}
 
-		uR, err := s.UseDatabase(ctx, db)
+		uR, err := s.UseDatabase(ctx, &schema.Database{DatabaseName: dbname})
 		if err != nil {
 			t.Fatalf("UseDatabase error %v", err)
 		}
@@ -374,7 +374,7 @@ func TestServerLoaduserDatabase(t *testing.T) {
 	md := metadata.Pairs("authorization", lr.Token)
 	ctx = metadata.NewIncomingContext(context.Background(), md)
 
-	newdb := &schema.Database{
+	newdb := &schema.DatabaseSettings{
 		DatabaseName: testDatabase,
 	}
 	_, err = s.CreateDatabase(ctx, newdb)
@@ -440,7 +440,7 @@ func TestServerListUsersAdmin(t *testing.T) {
 	md := metadata.Pairs("authorization", lr.Token)
 	ctx = metadata.NewIncomingContext(context.Background(), md)
 
-	newdb := &schema.Database{
+	newdb := &schema.DatabaseSettings{
 		DatabaseName: testDatabase,
 	}
 	_, err = s.CreateDatabase(ctx, newdb)
@@ -1198,7 +1198,7 @@ func TestServerUsermanagement(t *testing.T) {
 	md := metadata.Pairs("authorization", lr.Token)
 	ctx = metadata.NewIncomingContext(context.Background(), md)
 
-	newdb := &schema.Database{
+	newdb := &schema.DatabaseSettings{
 		DatabaseName: testDatabase,
 	}
 	_, err = s.CreateDatabase(ctx, newdb)
@@ -1242,7 +1242,7 @@ func TestServerDbOperations(t *testing.T) {
 	md := metadata.Pairs("authorization", lr.Token)
 	ctx = metadata.NewIncomingContext(context.Background(), md)
 
-	newdb := &schema.Database{
+	newdb := &schema.DatabaseSettings{
 		DatabaseName: testDatabase,
 	}
 	_, err = s.CreateDatabase(ctx, newdb)
@@ -1588,7 +1588,7 @@ func TestServerErrors(t *testing.T) {
 
 	require.NoError(t, err)
 	someDb1 := "somedatabase1"
-	_, err = s.CreateDatabase(ctx, &schema.Database{DatabaseName: someDb1})
+	_, err = s.CreateDatabase(ctx, &schema.DatabaseSettings{DatabaseName: someDb1})
 	require.NoError(t, err)
 	_, err = s.UseDatabase(ctx2, &schema.Database{DatabaseName: someDb1})
 
@@ -1695,7 +1695,7 @@ func TestServerErrors(t *testing.T) {
 
 	// CreateDatabase errors
 	someDb2 := "somedatabase2"
-	createDbReq := &schema.Database{DatabaseName: someDb2}
+	createDbReq := &schema.DatabaseSettings{DatabaseName: someDb2}
 	s.Options.auth = false
 	_, err = s.CreateDatabase(ctx, createDbReq)
 	require.Equal(t, errors.New("this command is available only with authentication on"), err)
