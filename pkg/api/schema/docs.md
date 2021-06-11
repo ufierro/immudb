@@ -12,6 +12,7 @@
     - [CreateUserRequest](#immudb.schema.CreateUserRequest)
     - [Database](#immudb.schema.Database)
     - [DatabaseListResponse](#immudb.schema.DatabaseListResponse)
+    - [DatabaseSettings](#immudb.schema.DatabaseSettings)
     - [DualProof](#immudb.schema.DualProof)
     - [Entries](#immudb.schema.Entries)
     - [Entry](#immudb.schema.Entry)
@@ -200,12 +201,6 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | databaseName | [string](#string) |  |  |
-| replica | [bool](#bool) |  |  |
-| srcDatabase | [string](#string) |  |  |
-| srcAddress | [string](#string) |  |  |
-| srcPort | [uint32](#uint32) |  |  |
-| followerUsr | [string](#string) |  |  |
-| followerPwd | [string](#string) |  |  |
 
 
 
@@ -221,6 +216,27 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | databases | [Database](#immudb.schema.Database) | repeated |  |
+
+
+
+
+
+
+<a name="immudb.schema.DatabaseSettings"></a>
+
+### DatabaseSettings
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| databaseName | [string](#string) |  |  |
+| replica | [bool](#bool) |  |  |
+| srcDatabase | [string](#string) |  |  |
+| srcAddress | [string](#string) |  |  |
+| srcPort | [uint32](#uint32) |  |  |
+| followerUsr | [string](#string) |  |  |
+| followerPwd | [string](#string) |  |  |
 
 
 
@@ -1358,9 +1374,10 @@ IMPORTANT: All get and safeget functions return base64-encoded keys and values, 
 | ZAdd | [ZAddRequest](#immudb.schema.ZAddRequest) | [TxMetadata](#immudb.schema.TxMetadata) |  |
 | VerifiableZAdd | [VerifiableZAddRequest](#immudb.schema.VerifiableZAddRequest) | [VerifiableTx](#immudb.schema.VerifiableTx) |  |
 | ZScan | [ZScanRequest](#immudb.schema.ZScanRequest) | [ZEntries](#immudb.schema.ZEntries) |  |
-| CreateDatabase | [Database](#immudb.schema.Database) | [.google.protobuf.Empty](#google.protobuf.Empty) |  |
+| CreateDatabase | [DatabaseSettings](#immudb.schema.DatabaseSettings) | [.google.protobuf.Empty](#google.protobuf.Empty) |  |
 | DatabaseList | [.google.protobuf.Empty](#google.protobuf.Empty) | [DatabaseListResponse](#immudb.schema.DatabaseListResponse) |  |
 | UseDatabase | [Database](#immudb.schema.Database) | [UseDatabaseReply](#immudb.schema.UseDatabaseReply) |  |
+| UpdateDatabase | [DatabaseSettings](#immudb.schema.DatabaseSettings) | [.google.protobuf.Empty](#google.protobuf.Empty) |  |
 | CleanIndex | [.google.protobuf.Empty](#google.protobuf.Empty) | [.google.protobuf.Empty](#google.protobuf.Empty) |  |
 | ChangePermission | [ChangePermissionRequest](#immudb.schema.ChangePermissionRequest) | [.google.protobuf.Empty](#google.protobuf.Empty) |  |
 | SetActiveUser | [SetActiveUserRequest](#immudb.schema.SetActiveUserRequest) | [.google.protobuf.Empty](#google.protobuf.Empty) |  |
