@@ -179,7 +179,7 @@ func (d *db) initSQLEngine(systemDB DB) error {
 	dbDir := d.path()
 
 	if err == sql.ErrDatabaseDoesNotExist {
-		d.Logger.Infof("Migrating catalog from systemdb to %s...", dbDir)
+		d.Logger.Infof("Migrating catalog to %s...", dbDir)
 
 		var catalogSt *store.ImmuStore
 		if systemDB == nil {
@@ -201,11 +201,16 @@ func (d *db) initSQLEngine(systemDB DB) error {
 		}
 
 		err = sqlEngine.DumpCatalogTo(d.options.dbName, dbInstanceName, d.st)
-		if err != nil {
+		if err == sql.ErrDatabaseDoesNotExist {
+			_, _, err := d.sqlEngine.ExecPreparedStmts([]sql.SQLStmt{&sql.CreateDatabaseStmt{DB: dbInstanceName}}, nil, true)
+			if err != nil {
+				return logErr(d.Logger, "Unable to open store: %s", err)
+			}
+		} else if err != nil {
 			return err
 		}
 
-		d.Logger.Infof("Catalog successfully migrated from systemdb to %s", dbDir)
+		d.Logger.Infof("Catalog successfully migrated to %s", dbDir)
 
 		err = d.sqlEngine.EnsureCatalogReady(d.sqlInitCancel)
 		if err != nil {
