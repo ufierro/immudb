@@ -204,7 +204,7 @@ func (d *db) initSQLEngine(systemDB DB) error {
 
 		err = sqlEngine.DumpCatalogTo(d.options.dbName, dbInstanceName, d.st)
 		if err == sql.ErrDatabaseDoesNotExist {
-			_, _, err := d.sqlEngine.ExecPreparedStmts([]sql.SQLStmt{&sql.CreateDatabaseStmt{DB: dbInstanceName}}, nil, true)
+			_, err := d.sqlEngine.ExecPreparedStmts([]sql.SQLStmt{&sql.CreateDatabaseStmt{DB: dbInstanceName}}, nil, true)
 			if err != nil {
 				return logErr(d.Logger, "Unable to open database: %v", err)
 			}
