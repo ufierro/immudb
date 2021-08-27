@@ -96,11 +96,11 @@ func setResult(l yyLexer, stmts []SQLStmt) {
 %type <stmt> sqlstmt dstmt ddlstmt dmlstmt dqlstmt
 %type <colsSpec> colsSpec
 %type <colSpec> colSpec
-%type <ids> ids
+%type <ids> ids opt_ids
 %type <cols> cols
 %type <rows> rows
 %type <row> row
-%type <values> values
+%type <values> values opt_values
 %type <value> val
 %type <sel> selector
 %type <sels> opt_selectors selectors
@@ -230,9 +230,8 @@ opt_if_not_exists:
     }
 
 
-
 dmlstmt:
-    INSERT INTO tableRef '(' ids ')' VALUES rows
+    INSERT INTO tableRef '(' opt_ids ')' VALUES rows
     {
         $$ = &UpsertIntoStmt{isInsert: true, tableRef: $3, cols: $5, rows: $8}
     }
@@ -240,6 +239,16 @@ dmlstmt:
     UPSERT INTO tableRef '(' ids ')' VALUES rows
     {
         $$ = &UpsertIntoStmt{tableRef: $3, cols: $5, rows: $8}
+    }
+
+opt_ids:
+    {
+        $$ = nil
+    }
+|
+    ids
+    {
+        $$ = $1
     }
 
 rows:
@@ -254,7 +263,7 @@ rows:
     }
 
 row:
-    '(' values ')'
+    '(' opt_values ')'
     {
         $$ = &RowSpec{Values: $2}
     }
@@ -281,6 +290,16 @@ cols:
         $$ = append($1, $3)
     }
 
+opt_values:
+    {
+        $$ = nil
+    }
+|
+    values
+    {
+        $$ = $1
+    }
+    
 values:
     val
     {
