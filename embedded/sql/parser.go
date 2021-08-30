@@ -314,20 +314,33 @@ func (l *lexer) Lex(lval *yySymType) int {
 		return IDENTIFIER
 	}
 
-	if isNumber(ch) {
+	if ch == '-' || isNumber(ch) {
+		isNegative := ch == '-'
+
 		tail, err := l.readNumber()
 		if err != nil {
 			lval.err = err
 			return ERROR
 		}
 
-		val, err := strconv.ParseUint(fmt.Sprintf("%c%s", ch, tail), 10, 64)
-		if err != nil {
-			lval.err = err
-			return ERROR
+		if isNegative {
+			val, err := strconv.ParseInt(fmt.Sprintf("%c%s", ch, tail), 10, 64)
+			if err != nil {
+				lval.err = err
+				return ERROR
+			}
+
+			lval.number = uint64(val)
+		} else {
+			val, err := strconv.ParseUint(fmt.Sprintf("%c%s", ch, tail), 10, 64)
+			if err != nil {
+				lval.err = err
+				return ERROR
+			}
+
+			lval.number = val
 		}
 
-		lval.number = val
 		return NUMBER
 	}
 
