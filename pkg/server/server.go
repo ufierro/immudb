@@ -578,8 +578,8 @@ func (s *ImmuServer) startReplicationFor(db database.DB, replicationOptions *Rep
 		WithMasterDatabase(replicationOptions.MasterDatabase).
 		WithMasterAddress(replicationOptions.MasterAddress).
 		WithMasterPort(replicationOptions.MasterPort).
-		WithReplicaUsername(replicationOptions.ReplicaUsername).
-		WithReplicaPassword(replicationOptions.ReplicaPassword).
+		WithFollowerUsername(replicationOptions.FollowerUsername).
+		WithFollowerPassword(replicationOptions.FollowerPassword).
 		WithStreamChunkSize(s.Options.StreamChunkSize)
 
 	f, err := replication.NewTxReplicator(db, replicatorOpts, s.Logger)
@@ -782,15 +782,15 @@ func (s *ImmuServer) CreateDatabaseWith(ctx context.Context, req *schema.Databas
 	}
 
 	settings := &dbSettings{
-		Database:        req.DatabaseName,
-		Replica:         req.Replica,
-		MasterDatabase:  req.MasterDatabase,
-		MasterAddress:   req.MasterAddress,
-		MasterPort:      int(req.MasterPort),
-		ReplicaUsername: req.ReplicaUsername,
-		ReplicaPassword: req.ReplicaPassword,
-		CreatedBy:       user.Username,
-		CreatedAt:       time.Now(),
+		Database:         req.DatabaseName,
+		Replica:          req.Replica,
+		MasterDatabase:   req.MasterDatabase,
+		MasterAddress:    req.MasterAddress,
+		MasterPort:       int(req.MasterPort),
+		FollowerUsername: req.FollowerUsername,
+		FollowerPassword: req.FollowerPassword,
+		CreatedBy:        user.Username,
+		CreatedAt:        time.Now(),
 	}
 
 	err = s.saveSettings(settings)
@@ -878,8 +878,8 @@ func (s *ImmuServer) UpdateDatabase(ctx context.Context, req *schema.DatabaseSet
 	settings.MasterDatabase = req.MasterDatabase
 	settings.MasterAddress = req.MasterAddress
 	settings.MasterPort = int(req.MasterPort)
-	settings.ReplicaUsername = req.ReplicaUsername
-	settings.ReplicaPassword = req.ReplicaPassword
+	settings.FollowerUsername = req.FollowerUsername
+	settings.FollowerPassword = req.FollowerPassword
 	settings.UpdatedBy = user.Username
 	settings.UpdatedAt = time.Now()
 
@@ -910,11 +910,11 @@ func replicationOptionsFrom(settings *dbSettings) *ReplicationOptions {
 	}
 
 	return &ReplicationOptions{
-		MasterDatabase:  settings.MasterDatabase,
-		MasterAddress:   settings.MasterAddress,
-		MasterPort:      settings.MasterPort,
-		ReplicaUsername: settings.ReplicaUsername,
-		ReplicaPassword: settings.ReplicaPassword,
+		MasterDatabase:   settings.MasterDatabase,
+		MasterAddress:    settings.MasterAddress,
+		MasterPort:       settings.MasterPort,
+		FollowerUsername: settings.FollowerUsername,
+		FollowerPassword: settings.FollowerPassword,
 	}
 }
 
@@ -1077,17 +1077,17 @@ func (s *ImmuServer) getDBFromCtx(ctx context.Context, methodName string) (datab
 }
 
 type dbSettings struct {
-	Database        string    `json:"database"`
-	Replica         bool      `json:"replica"`
-	MasterDatabase  string    `json:"masterDatabase"`
-	MasterAddress   string    `json:"masterAddress"`
-	MasterPort      int       `json:"masterPort"`
-	ReplicaUsername string    `json:"replicaUsername"`
-	ReplicaPassword string    `json:"replicaPassword"`
-	CreatedBy       string    `json:"createdBy"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedBy       string    `json:"updatedBy"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	Database         string    `json:"database"`
+	Replica          bool      `json:"replica"`
+	MasterDatabase   string    `json:"masterDatabase"`
+	MasterAddress    string    `json:"masterAddress"`
+	MasterPort       int       `json:"masterPort"`
+	FollowerUsername string    `json:"followerUsername"`
+	FollowerPassword string    `json:"followerPassword"`
+	CreatedBy        string    `json:"createdBy"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedBy        string    `json:"updatedBy"`
+	UpdatedAt        time.Time `json:"updatedAt"`
 }
 
 func (s *ImmuServer) loadSettings(database string) (*dbSettings, error) {

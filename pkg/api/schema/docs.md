@@ -239,8 +239,8 @@
 | masterDatabase | [string](#string) |  |  |
 | masterAddress | [string](#string) |  |  |
 | masterPort | [uint32](#uint32) |  |  |
-| replicaUsername | [string](#string) |  |  |
-| replicaPassword | [string](#string) |  |  |
+| followerUsername | [string](#string) |  |  |
+| followerPassword | [string](#string) |  |  |
 
 
 

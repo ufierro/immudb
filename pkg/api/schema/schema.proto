@@ -335,8 +335,8 @@ message DatabaseSettings {
 	string masterDatabase = 3;
 	string masterAddress = 4;
 	uint32 masterPort = 5;
-	string replicaUsername = 6;
-	string replicaPassword = 7;
+	string followerUsername = 6;
+	string followerPassword = 7;
 }
 
 message Table {
