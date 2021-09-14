@@ -86,17 +86,17 @@ func (cl *commandline) database(cmd *cobra.Command) {
 				return err
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "database '%s' (replica = %v) successfully created\n", args[0], settings.Replica)
+			fmt.Fprintf(cmd.OutOrStdout(), "database '%s' {replica = %v} successfully created\n", args[0], settings.Replica)
 			return nil
 		},
 		Args: cobra.ExactArgs(1),
 	}
-	cc.Flags().BoolP("replica", "r", false, "set database as a replica")
-	cc.Flags().String("master-database", "", "set master database to be replicated")
-	cc.Flags().String("master-address", "127.0.0.1", "set master address")
-	cc.Flags().Uint32("master-port", 3322, "set master port")
-	cc.Flags().String("replica-username", "", "set username used for replication")
-	cc.Flags().String("replica-password", "", "set password used for replication")
+	cc.Flags().BoolP("replication-enabled", "r", false, "set database as a replica")
+	cc.Flags().String("replication-master-database", "", "set master database to be replicated")
+	cc.Flags().String("replication-master-address", "127.0.0.1", "set master address")
+	cc.Flags().Uint32("replication-master-port", 3322, "set master port")
+	cc.Flags().String("replication-follower-username", "", "set username used for replication")
+	cc.Flags().String("replication-follower-password", "", "set password used for replication")
 
 	cu := &cobra.Command{
 		Use:               "update",
@@ -118,17 +118,17 @@ func (cl *commandline) database(cmd *cobra.Command) {
 				return err
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "database '%s' (replica = %v) successfully updated\n", args[0], settings.Replica)
+			fmt.Fprintf(cmd.OutOrStdout(), "database '%s' {replica = %v} successfully updated\n", args[0], settings.Replica)
 			return nil
 		},
 		Args: cobra.ExactArgs(1),
 	}
-	cu.Flags().BoolP("replica", "r", false, "set database as a replica")
-	cu.Flags().String("master-database", "", "set master database to be replicated")
-	cu.Flags().String("master-address", "127.0.0.1", "set master address")
-	cu.Flags().Uint32("master-port", 3322, "set master port")
-	cu.Flags().String("replica-username", "", "set username used for replication")
-	cu.Flags().String("replica-password", "", "set password used for replication")
+	cu.Flags().BoolP("replication-enabled", "r", false, "set database as a replica")
+	cu.Flags().String("replication-master-database", "", "set master database to be replicated")
+	cu.Flags().String("replication-master-address", "127.0.0.1", "set master address")
+	cu.Flags().Uint32("replication-master-port", 3322, "set master port")
+	cu.Flags().String("replication-follower-username", "", "set username used for replication")
+	cu.Flags().String("replication-follower-password", "", "set password used for replication")
 
 	ccu := &cobra.Command{
 		Use:               "use command",
@@ -189,47 +189,47 @@ func (cl *commandline) database(cmd *cobra.Command) {
 }
 
 func prepareDatabaseSettings(db string, flags *pflag.FlagSet) (*schema.DatabaseSettings, error) {
-	isReplica, err := flags.GetBool("replica")
+	replicationEnabled, err := flags.GetBool("replication-enabled")
 	if err != nil {
 		return nil, err
 	}
 
-	if !isReplica {
+	if !replicationEnabled {
 		return &schema.DatabaseSettings{DatabaseName: db}, nil
 	}
 
-	masterDatabase, err := flags.GetString("master-database")
+	masterDatabase, err := flags.GetString("replication-master-database")
 	if err != nil {
 		return nil, err
 	}
 
-	masterAddress, err := flags.GetString("master-address")
+	masterAddress, err := flags.GetString("replication-master-address")
 	if err != nil {
 		return nil, err
 	}
 
-	masterPort, err := flags.GetUint32("master-port")
+	masterPort, err := flags.GetUint32("replication-master-port")
 	if err != nil {
 		return nil, err
 	}
 
-	replicaUsername, err := flags.GetString("replica-username")
+	followerUsername, err := flags.GetString("replication-follower-username")
 	if err != nil {
 		return nil, err
 	}
 
-	replicaPassword, err := flags.GetString("replica-username")
+	followerPassword, err := flags.GetString("replication-follower-password")
 	if err != nil {
 		return nil, err
 	}
 
 	return &schema.DatabaseSettings{
-		DatabaseName:    db,
-		Replica:         isReplica,
-		MasterDatabase:  masterDatabase,
-		MasterAddress:   masterAddress,
-		MasterPort:      masterPort,
-		ReplicaUsername: replicaUsername,
-		ReplicaPassword: replicaPassword,
+		DatabaseName:     db,
+		Replica:          replicationEnabled,
+		MasterDatabase:   masterDatabase,
+		MasterAddress:    masterAddress,
+		MasterPort:       masterPort,
+		FollowerUsername: followerUsername,
+		FollowerPassword: followerPassword,
 	}, nil
 }
