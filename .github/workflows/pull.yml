@@ -8,8 +8,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - {os: ubuntu-latest, go: 1.13, immudb: "immudb", immuclient: "immuclient"}
-          - {os: windows-latest, go: 1.15, immudb: "immudb.exe", immuclient: "immuclient.exe"}
+          - {os: ubuntu-latest, go: 1.17, immudb: "immudb", immuclient: "immuclient"}
+          - {os: windows-latest, go: 1.17, immudb: "immudb.exe", immuclient: "immuclient.exe"}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/setup-go@v2
