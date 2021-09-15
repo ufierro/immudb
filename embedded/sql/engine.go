@@ -555,7 +555,10 @@ func (e *Engine) loadTables(db *Database, catalogSnap, dataSnap *store.Snapshot)
 				return ErrCorruptedData
 			}
 
-			table.maxPK = binary.BigEndian.Uint64(encMaxPK)
+			// map to signed integer space
+			encMaxPK[0] ^= 0x80
+
+			table.maxPK = int64(binary.BigEndian.Uint64(encMaxPK))
 		}
 	}
 
@@ -937,15 +940,16 @@ func EncodeValue(val interface{}, colType SQLValueType, maxLen int) ([]byte, err
 		}
 	case IntegerType:
 		{
-			intVal, ok := val.(uint64)
+			intVal, ok := val.(int64)
 			if !ok {
 				return nil, ErrInvalidValue
 			}
 
+			// map to unsigned integer space
 			// len(v) + v
 			var encv [EncLenLen + 8]byte
 			binary.BigEndian.PutUint32(encv[:], uint32(8))
-			binary.BigEndian.PutUint64(encv[EncLenLen:], intVal)
+			binary.BigEndian.PutUint64(encv[EncLenLen:], uint64(intVal))
 
 			return encv[:], nil
 		}
@@ -1030,14 +1034,16 @@ func EncodeAsKey(val interface{}, colType SQLValueType, maxLen int) ([]byte, err
 				return nil, ErrCorruptedData
 			}
 
-			intVal, ok := val.(uint64)
+			intVal, ok := val.(int64)
 			if !ok {
 				return nil, ErrInvalidValue
 			}
 
 			// v
+			// map to unsigned integer space
 			var encv [8]byte
-			binary.BigEndian.PutUint64(encv[:], intVal)
+			binary.BigEndian.PutUint64(encv[:], uint64(intVal))
+			encv[0] ^= 0x80
 
 			return encv[:], nil
 		}
@@ -1109,16 +1115,14 @@ func DecodeValue(b []byte, colType SQLValueType) (TypedValue, int, error) {
 		}
 	case IntegerType:
 		{
-			if vlen > 8 {
+			if vlen != 8 {
 				return nil, 0, ErrCorruptedData
 			}
 
-			buff := [8]byte{0}
-			copy(buff[8-vlen:], b[voff:voff+vlen])
-			v := binary.BigEndian.Uint64(buff[:])
+			v := binary.BigEndian.Uint64(b[voff:])
 			voff += vlen
 
-			return &Number{val: v}, voff, nil
+			return &Number{val: int64(v)}, voff, nil
 		}
 	case BooleanType:
 		{
@@ -1340,7 +1344,7 @@ type ExecSummary struct {
 	DMTxs []*store.TxMetadata
 
 	UpdatedRows     int
-	LastInsertedPKs map[string]uint64
+	LastInsertedPKs map[string]int64
 }
 
 func (e *Engine) ExecPreparedStmts(stmts []SQLStmt, params map[string]interface{}, waitForIndexing bool) (summary *ExecSummary, err error) {
@@ -1368,7 +1372,7 @@ func (e *Engine) ExecPreparedStmts(stmts []SQLStmt, params map[string]interface{
 	}
 
 	summary = &ExecSummary{
-		LastInsertedPKs: make(map[string]uint64),
+		LastInsertedPKs: make(map[string]int64),
 	}
 
 	// TODO: eval params at once
